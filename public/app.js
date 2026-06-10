@@ -37,6 +37,10 @@ const api = {
     const res = await fetch(`${API_BASE}/api/plants/${id}/fertilize`, { method: 'POST' });
     return res.json();
   },
+  async getCareRecords(plantId) {
+    const res = await fetch(`${API_BASE}/api/plants/${plantId}/care-records`);
+    return res.json();
+  },
   async getPhotos(plantId) {
     const res = await fetch(`${API_BASE}/api/plants/${plantId}/photos`);
     return res.json();
@@ -530,6 +534,13 @@ const PlantManagement = {
     const uploadFile = ref(null);
     const photoNote = ref('');
     const photoLoading = ref(false);
+    const detailDrawerVisible = ref(false);
+    const detailPlant = ref(null);
+    const detailPhotos = ref([]);
+    const detailCareRecords = ref([]);
+    const detailPestKeyword = ref('');
+    const detailPestResults = ref([]);
+    const detailLoading = ref(false);
 
     const formData = reactive({
       name: '',
@@ -766,6 +777,67 @@ const PlantManagement = {
       uploadFile.value = uploadFileObj.raw;
     };
 
+    const getHumidityLabel = (humidity) => {
+      const opt = humidityOptions.find(o => o.value === humidity);
+      return opt ? `${opt.icon} ${opt.label}` : humidity;
+    };
+
+    const openDetailDrawer = async (plant) => {
+      detailPlant.value = plant;
+      detailDrawerVisible.value = true;
+      detailLoading.value = true;
+      detailPestKeyword.value = '';
+      detailPestResults.value = [];
+      try {
+        const [photos, records] = await Promise.all([
+          api.getPhotos(plant.id),
+          api.getCareRecords(plant.id)
+        ]);
+        detailPhotos.value = photos;
+        detailCareRecords.value = records.slice(0, 10);
+      } catch (e) {
+        ElMessage.error('加载详情失败');
+      } finally {
+        detailLoading.value = false;
+      }
+    };
+
+    const detailSearchPests = async () => {
+      if (!detailPestKeyword.value.trim()) {
+        detailPestResults.value = [];
+        return;
+      }
+      try {
+        detailPestResults.value = await api.searchPests(detailPestKeyword.value);
+      } catch (e) {
+        ElMessage.error('搜索病虫害失败');
+      }
+    };
+
+    const detailWater = async () => {
+      if (!detailPlant.value) return;
+      try {
+        await api.waterPlant(detailPlant.value.id);
+        ElMessage.success(`已记录 ${detailPlant.value.name} 的浇水`);
+        loadPlants();
+        openDetailDrawer(detailPlant.value);
+      } catch (e) {
+        ElMessage.error('操作失败');
+      }
+    };
+
+    const detailFertilize = async () => {
+      if (!detailPlant.value) return;
+      try {
+        await api.fertilizePlant(detailPlant.value.id);
+        ElMessage.success(`已记录 ${detailPlant.value.name} 的施肥`);
+        loadPlants();
+        openDetailDrawer(detailPlant.value);
+      } catch (e) {
+        ElMessage.error('操作失败');
+      }
+    };
+
     onMounted(() => {
       loadPlants();
     });
@@ -801,12 +873,24 @@ const PlantManagement = {
       getStatusText,
       getDifficultyLabel,
       getLightLabel,
+      getHumidityLabel,
       formatDate,
       getDaysDiff,
       openPhotoDialog,
       handlePhotoUpload,
       handlePhotoDelete,
-      handleFileChange
+      handleFileChange,
+      detailDrawerVisible,
+      detailPlant,
+      detailPhotos,
+      detailCareRecords,
+      detailPestKeyword,
+      detailPestResults,
+      detailLoading,
+      openDetailDrawer,
+      detailSearchPests,
+      detailWater,
+      detailFertilize
     };
   },
   template: `
@@ -842,7 +926,7 @@ const PlantManagement = {
         </div>
         <el-row v-else :gutter="20">
           <el-col v-for="plant in filteredPlants" :key="plant.id" :xs="24" :sm="12" :md="8" :lg="6" style="margin-bottom: 20px;">
-            <div class="plant-card">
+            <div class="plant-card" @click="openDetailDrawer(plant)" style="cursor: pointer;">
               <div class="plant-card-image">
                 <img v-if="plantPhotos.find(p => p.plantId === plant.id)" :src="plantPhotos.find(p => p.plantId === plant.id)?.url" alt="" />
                 <span v-else>🪴</span>
@@ -873,7 +957,7 @@ const PlantManagement = {
                     </el-tag>
                   </div>
                 </div>
-                <div class="plant-card-actions">
+                <div class="plant-card-actions" @click.stop>
                   <el-button size="small" type="primary" @click="handleWater(plant)">浇水</el-button>
                   <el-button size="small" type="warning" @click="handleFertilize(plant)">施肥</el-button>
                   <el-dropdown>
@@ -1028,6 +1112,108 @@ const PlantManagement = {
           </div>
         </div>
       </el-dialog>
+
+      <el-drawer v-model="detailDrawerVisible" :title="detailPlant?.name + ' - 植物详情'" size="520px" direction="rtl">
+        <div v-if="detailPlant" v-loading="detailLoading" class="detail-drawer-content">
+          <div class="detail-section">
+            <div class="detail-section-title">📋 基础信息</div>
+            <div class="detail-info-grid">
+              <div class="detail-info-item">
+                <span class="detail-info-label">品种</span>
+                <span class="detail-info-value">{{ detailPlant.species }}</span>
+              </div>
+              <div class="detail-info-item">
+                <span class="detail-info-label">养护难度</span>
+                <span class="difficulty-badge" :class="'difficulty-' + detailPlant.difficulty">{{ getDifficultyLabel(detailPlant.difficulty) }}</span>
+              </div>
+              <div class="detail-info-item">
+                <span class="detail-info-label">光照偏好</span>
+                <span class="detail-info-value">{{ getLightLabel(detailPlant.lightPreference) }}</span>
+              </div>
+              <div class="detail-info-item">
+                <span class="detail-info-label">湿度偏好</span>
+                <span class="detail-info-value">{{ getHumidityLabel(detailPlant.humidityPreference) }}</span>
+              </div>
+              <div class="detail-info-item">
+                <span class="detail-info-label">浇水周期</span>
+                <span class="detail-info-value">{{ detailPlant.wateringCycle }} 天</span>
+              </div>
+              <div class="detail-info-item">
+                <span class="detail-info-label">施肥周期</span>
+                <span class="detail-info-value">{{ detailPlant.fertilizingCycle }} 天</span>
+              </div>
+            </div>
+            <div v-if="detailPlant.notes" class="detail-notes">
+              <span class="detail-info-label">备注</span>
+              <span class="detail-info-value">{{ detailPlant.notes }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">⏰ 下次养护</div>
+            <div class="detail-care-row">
+              <div class="detail-care-card" :class="{ urgent: getDaysDiff(detailPlant.nextWatering) <= 3 }">
+                <div class="detail-care-icon">💧</div>
+                <div class="detail-care-info">
+                  <div class="detail-care-label">下次浇水</div>
+                  <el-tag size="small" :type="getDaysDiff(detailPlant.nextWatering) <= 0 ? 'danger' : getDaysDiff(detailPlant.nextWatering) <= 3 ? 'warning' : 'success'">
+                    {{ formatDate(detailPlant.nextWatering) }}
+                  </el-tag>
+                </div>
+                <el-button size="small" type="primary" @click="detailWater">浇水</el-button>
+              </div>
+              <div class="detail-care-card" :class="{ urgent: getDaysDiff(detailPlant.nextFertilizing) <= 3 }">
+                <div class="detail-care-icon">🌾</div>
+                <div class="detail-care-info">
+                  <div class="detail-care-label">下次施肥</div>
+                  <el-tag size="small" :type="getDaysDiff(detailPlant.nextFertilizing) <= 0 ? 'danger' : getDaysDiff(detailPlant.nextFertilizing) <= 3 ? 'warning' : 'success'">
+                    {{ formatDate(detailPlant.nextFertilizing) }}
+                  </el-tag>
+                </div>
+                <el-button size="small" type="warning" @click="detailFertilize">施肥</el-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">📝 最近记录</div>
+            <div v-if="detailCareRecords.length === 0" class="detail-empty">暂无养护记录</div>
+            <div v-else class="detail-records-list">
+              <div v-for="record in detailCareRecords" :key="record.id" class="detail-record-item">
+                <span class="detail-record-type">{{ record.type === 'watering' ? '💧 浇水' : '🌾 施肥' }}</span>
+                <span class="detail-record-date">{{ formatDate(record.date) }}</span>
+                <el-tag size="small" :type="record.completed ? 'success' : 'info'">{{ record.completed ? '已完成' : '待处理' }}</el-tag>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">📷 照片缩略图</div>
+            <div v-if="detailPhotos.length === 0" class="detail-empty">暂无照片记录</div>
+            <div v-else class="detail-photo-grid">
+              <div v-for="photo in detailPhotos.slice(0, 6)" :key="photo.id" class="detail-photo-thumb">
+                <img :src="photo.url" :alt="photo.note || ''" />
+                <div v-if="photo.note" class="detail-photo-note">{{ photo.note }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">🐛 病虫害搜索</div>
+            <div class="detail-pest-search">
+              <el-input v-model="detailPestKeyword" placeholder="输入症状关键词，如：黄叶、黑斑..." clearable size="small" @keyup.enter="detailSearchPests" style="flex: 1;" />
+              <el-button type="primary" size="small" @click="detailSearchPests">搜索</el-button>
+            </div>
+            <div v-if="detailPestResults.length > 0" class="detail-pest-results">
+              <div v-for="pest in detailPestResults.slice(0, 3)" :key="pest.id" class="detail-pest-item">
+                <div class="detail-pest-name">{{ pest.name }}</div>
+                <div class="detail-pest-symptoms">{{ pest.symptoms }}</div>
+                <div class="detail-pest-treatment">💊 {{ pest.treatment }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-drawer>
     </div>
   `
 };

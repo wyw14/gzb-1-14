@@ -248,6 +248,13 @@ app.post('/api/plants/:id/fertilize', (req, res) => {
   res.json({ ...plants[index], ...nextCare });
 });
 
+app.get('/api/plants/:id/care-records', (req, res) => {
+  const careRecords = readJSON('care-records.json');
+  const plantRecords = careRecords.filter(r => r.plantId === req.params.id);
+  plantRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+  res.json(plantRecords);
+});
+
 app.get('/api/plants/:id/photos', (req, res) => {
   const photos = readJSON('photos.json');
   const plantPhotos = photos.filter(p => p.plantId === req.params.id);

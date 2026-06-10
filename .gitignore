@@ -22,15 +22,8 @@ logs/
 # Caches
 .cache/
 .parcel-cache/
-.npm/
-.pnpm-store/
-.yarn/
-.turbo/
-.next/
-.nuxt/
 .eslintcache
 .stylelintcache
-.tsbuildinfo
 .vite/
 coverage/
 
@@ -51,14 +44,18 @@ public/uploads/
 *.tgz
 *.rar
 *.7z
-*.bak
-*.backup
-*.db
-*.sqlite
-*.sqlite3
+*.iso
+*.dmg
+*.exe
+*.msi
 *.mp4
 *.mov
+*.avi
+*.mkv
 *.psd
+*.ai
+*.bak
+*.backup
 
 # OS and editor files
 .DS_Store

@@ -724,6 +724,205 @@ body {
   transition: width 0.3s;
 }
 
+.detail-drawer-content {
+  padding: 0 4px;
+}
+
+.detail-section {
+  margin-bottom: 28px;
+}
+
+.detail-section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 14px;
+  padding-left: 10px;
+  border-left: 4px solid #4caf50;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detail-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.detail-info-label {
+  font-size: 13px;
+  color: #999;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.detail-info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.detail-notes {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.detail-care-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-care-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #f9fbf9;
+  border: 1px solid #e8f5e9;
+  border-radius: 10px;
+  transition: border-color 0.3s;
+}
+
+.detail-care-card.urgent {
+  border-color: #ff9800;
+  background: #fff8e1;
+}
+
+.detail-care-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.detail-care-info {
+  flex: 1;
+}
+
+.detail-care-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.detail-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-record-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.detail-record-type {
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.detail-record-date {
+  flex: 1;
+  color: #666;
+}
+
+.detail-empty {
+  text-align: center;
+  color: #bbb;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.detail-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.detail-photo-thumb {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+  aspect-ratio: 1;
+  position: relative;
+}
+
+.detail-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-photo-note {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-pest-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-pest-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-pest-item {
+  padding: 12px;
+  background: #f9fbf9;
+  border: 1px solid #e8f5e9;
+  border-radius: 8px;
+}
+
+.detail-pest-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.detail-pest-symptoms {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.detail-pest-treatment {
+  color: #2e7d32;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 60px;
@@ -741,5 +940,13 @@ body {
   
   .page-title {
     font-size: 22px;
+  }
+
+  .detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-photo-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
